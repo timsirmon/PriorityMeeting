@@ -1,6 +1,29 @@
+echo "# Python
 __pycache__/
-*.pyc
-env/
-*.env
-*.sqlite3
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+*.log
+*.backup
+
+# Flask
+instance/
+.webassets-cache
+
+# SQLite
 *.db
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# Migrations
+migrations/" > .gitignore
