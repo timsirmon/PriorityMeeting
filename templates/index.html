@@ -1,0 +1,33 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Proposed Topics</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Votes</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for topic in topics %}
+        <tr>
+            <td>{{ topic.title }}</td>
+            <td>{{ topic.description or 'N/A' }}</td>
+            <td>{{ topic.votes }}</td>
+            <td>
+                <form action="{{ url_for('vote', topic_id=topic.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" name="vote" value="upvote">Upvote</button>
+                </form>
+                <form action="{{ url_for('vote', topic_id=topic.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" name="vote" value="downvote">Downvote</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

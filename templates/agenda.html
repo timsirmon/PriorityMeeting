@@ -1,0 +1,26 @@
+<!-- templates/agenda.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Meeting Agenda</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Priority</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Votes</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for topic in topics %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ topic.title }}</td>
+            <td>{{ topic.description or 'N/A' }}</td>
+            <td>{{ topic.votes }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

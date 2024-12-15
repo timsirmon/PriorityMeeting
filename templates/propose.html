@@ -1,0 +1,15 @@
+<!-- templates/propose.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Propose a New Topic</h1>
+<form action="{{ url_for('propose') }}" method="POST">
+    <label for="title">Title:</label><br>
+    <input type="text" id="title" name="title" required><br><br>
+
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description" rows="4" cols="50"></textarea><br><br>
+
+    <button type="submit">Submit</button>
+</form>
+{% endblock %}
