@@ -1,7 +1,11 @@
 # app.py
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
+from flask_migrate import Migrate  # Add this import
 from models import db, User, Topic
 from forms import RegistrationForm, LoginForm
 from datetime import datetime
@@ -20,6 +24,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key')
 
 # Initialize extensions
 db.init_app(app)
+migrate = Migrate(app, db)  # Add this line
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
