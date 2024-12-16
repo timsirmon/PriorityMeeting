@@ -1,6 +1,5 @@
 <!-- templates/agenda.html -->
 {% extends "base.html" %}
-
 {% block content %}
 <h1>Meeting Agenda</h1>
 <table>
@@ -10,6 +9,7 @@
             <th>Title</th>
             <th>Description</th>
             <th>Votes</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -19,6 +19,13 @@
             <td>{{ topic.title }}</td>
             <td>{{ topic.description or 'N/A' }}</td>
             <td>{{ topic.votes }}</td>
+            <td class="actions">
+                {% if current_user.is_authenticated and current_user.id == topic.user_id %}
+                <form action="{{ url_for('delete_topic', topic_id=topic.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this topic?');">Delete</button>
+                </form>
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>

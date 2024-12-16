@@ -1,6 +1,5 @@
 <!-- templates/index.html -->
 {% extends "base.html" %}
-
 {% block content %}
 <h1>Proposed Topics</h1>
 <table>
@@ -18,13 +17,18 @@
             <td>{{ topic.title }}</td>
             <td>{{ topic.description or 'N/A' }}</td>
             <td>{{ topic.votes }}</td>
-            <td>
+            <td class="actions">
                 <form action="{{ url_for('vote', topic_id=topic.id) }}" method="POST" style="display:inline;">
                     <button type="submit" name="vote" value="upvote">Upvote</button>
                 </form>
                 <form action="{{ url_for('vote', topic_id=topic.id) }}" method="POST" style="display:inline;">
                     <button type="submit" name="vote" value="downvote">Downvote</button>
                 </form>
+                {% if current_user.is_authenticated and current_user.id == topic.user_id %}
+                <form action="{{ url_for('delete_topic', topic_id=topic.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this topic?');">Delete</button>
+                </form>
+                {% endif %}
             </td>
         </tr>
         {% endfor %}

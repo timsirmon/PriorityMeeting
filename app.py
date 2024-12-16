@@ -67,6 +67,26 @@ def index():
         flash('An error occurred while loading topics.', 'error')
         return render_template('index.html', topics=[])
 
+@app.route('/delete_topic/<int:topic_id>', methods=['POST'])
+@login_required
+def delete_topic(topic_id):
+    try:
+        topic = Topic.query.get_or_404(topic_id)
+        
+        # Check if current user is the topic creator
+        if topic.user_id != current_user.id:
+            flash('You can only delete your own topics.', 'error')
+            return redirect(url_for('index'))
+            
+        db.session.delete(topic)
+        db.session.commit()
+        flash('Topic deleted successfully.', 'success')
+    except Exception as e:
+        app.logger.error(f'Error deleting topic: {str(e)}')
+        flash('An error occurred while deleting the topic.', 'error')
+        
+    return redirect(url_for('index'))
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
