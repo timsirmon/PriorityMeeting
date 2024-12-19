@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon - Sirmoni</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 0.5em;
+            animation: fadeIn 2s ease-in;
+        }
+
+        .subtitle {
+            font-size: 1.5em;
+            margin-bottom: 2em;
+            color: #ccc;
+            animation: fadeIn 2s ease-in 0.5s forwards;
+            opacity: 0;
+        }
+
+        .email-input {
+            padding: 10px 15px;
+            width: 60%;
+            max-width: 300px;
+            border: none;
+            border-radius: 25px;
+            margin-right: 10px;
+            outline: none;
+            font-size: 1em;
+        }
+
+        .notify-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+        }
+
+        .notify-btn:hover {
+            background: #45a049;
+        }
+
+        .social-links {
+            margin-top: 40px;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 1.2em;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #4CAF50;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .countdown {
+            font-size: 2em;
+            margin: 20px 0;
+            animation: fadeIn 2s ease-in 1s forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SirMoni</h1>
+        <p class="subtitle">Something amazing is coming soon...</p>
+        <div class="countdown" id="countdown">Launching...soon!</div>
+        <div>
+            <input type="email" placeholder="Enter your email" class="email-input">
+            <button class="notify-btn">Notify Me</button>
+        </div>
+        <div class="social-links">
+            <a href="#">Twitter</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">GitHub</a>
+        </div>
+    </div>
+</body>
+</html>

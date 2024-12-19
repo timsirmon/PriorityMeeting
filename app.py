@@ -59,6 +59,10 @@ def load_user(user_id):
 
 @app.route('/')
 def index():
+    return render_template('coming_soon.html')
+
+@app.route('/dev')
+def index():
     try:
         topics = Topic.query.order_by(Topic.votes.desc(), Topic.created_at.desc()).all()
         return render_template('index.html', topics=topics)
