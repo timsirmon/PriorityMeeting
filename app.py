@@ -62,7 +62,7 @@ def index():
     return render_template('coming_soon.html')
 
 @app.route('/dev')
-def index():
+def development():  # Changed from index() to development()
     try:
         topics = Topic.query.order_by(Topic.votes.desc(), Topic.created_at.desc()).all()
         return render_template('index.html', topics=topics)
