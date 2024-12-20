@@ -142,3 +142,168 @@ textarea {
     font-weight: bold;
     color: #333;
 }
+.login-prompt {
+    text-align: center;
+    padding: 2rem;
+    max-width: 400px;
+    margin: 2rem auto;
+    background: #f5f5f5;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.login-prompt h2 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.login-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    margin: 1rem 0;
+}
+
+.login-button:hover {
+    background-color: #45a049;
+}
+/* Vote button styles */
+.vote-button {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: none;
+    margin: 0 2px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.vote-button.active-add {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.vote-button.active-remove {
+    background-color: #f44336;
+    color: white;
+}
+
+.vote-button.active-remove:hover {
+    background-color: #d32f2f;
+}
+.vote-button.inactive {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+}
+
+.vote-status {
+    padding: 10px;
+    margin: 10px 0;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    font-weight: bold;
+}
+.sort-link {
+    text-decoration: none;
+    color: #666;
+    margin-left: 5px;
+    display: inline-block;
+    width: 1em;
+    text-align: center;
+}
+
+.sort-link:hover {
+    color: #333;
+    background-color: #f5f5f5;
+    border-radius: 3px;
+}
+#notifications-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.notification {
+    background: white;
+    padding: 15px 25px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification.success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.notification.error {
+    background-color: #f44336;
+    color: white;
+}
+
+.notification.info {
+    background-color: #2196F3;
+    color: white;
+}
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    background-color: #f1f1f1;
+    color: #333;
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 4px;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-item {
+    width: 100%;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    color: black;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f1f1;
+}
+
+/* Style for the menu button */
+.dropbtn {
+    font-weight: bold;
+    padding: 5px 10px;
+}

@@ -6,7 +6,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
-from models import db, User, Topic
+from models import db, User, Topic, VoteRecord
 from forms import RegistrationForm, LoginForm
 from datetime import datetime
 import os
@@ -55,17 +55,51 @@ with app.app_context():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))  # Updated from User.query.get()
+# @app.route('/')
+# def index():
+    # return render_template('coming_soon.html')
 
+# @app.route('/dev')
+# def development():  
+    # try:
+    #     topics = Topic.query.order_by(Topic.votes.desc(), Topic.created_at.desc()).all()
+    #     return render_template('index.html', topics=topics)
+    # except Exception as e:
+    #     app.logger.error(f'Error in index route: {str(e)}')
+    #     flash('An error occurred while loading topics.', 'error')
+    #     return render_template('index.html', topics=[])
 @app.route('/')
 def index():
-    return render_template('coming_soon.html')
-
-@app.route('/dev')
-def development():  # Changed from index() to development()
+    if not current_user.is_authenticated:
+        return render_template('index.html')
     try:
-        topics = Topic.query.order_by(Topic.votes.desc(), Topic.created_at.desc()).all()
-        return render_template('index.html', topics=topics)
+        sort = request.args.get('sort')
+        direction = request.args.get('direction', 'asc')  # default to ascending
+        query = Topic.query.filter_by(completed=False)
+
+        if sort == 'title':
+            query = query.order_by(Topic.title.desc() if direction == 'desc' else Topic.title)
+        elif sort == 'votes':
+            query = query.order_by(Topic.votes.desc() if direction == 'desc' else Topic.votes)
+        elif sort == 'date':
+            query = query.order_by(Topic.created_at if direction == 'desc' else Topic.created_at.desc())
+        else:
+            # Default sort by creation date, newest first
+            query = query.order_by(Topic.created_at.desc())
+
+        topics = query.all()
+        
+        # Add these lines to pass the required variables
+        votes_used = current_user.get_total_votes_used()
+        total_votes = current_user.get_total_available_votes()
+        
+        return render_template('index.html', 
+                             topics=topics,
+                             current_sort=sort, 
+                             current_direction=direction,
+                             votes_used=votes_used,
+                             total_votes=total_votes)
     except Exception as e:
         app.logger.error(f'Error in index route: {str(e)}')
         flash('An error occurred while loading topics.', 'error')
@@ -81,11 +115,26 @@ def delete_topic(topic_id):
         if topic.user_id != current_user.id:
             flash('You can only delete your own topics.', 'error')
             return redirect(url_for('index'))
-            
+
+        # Get all vote records for this topic before deleting
+        vote_records = VoteRecord.query.filter_by(topic_id=topic_id).all()
+
+        # Delete all vote records for this topic
+        for vote_record in vote_records:
+            db.session.delete(vote_record)
+
+        # Delete the topic
         db.session.delete(topic)
         db.session.commit()
-        flash('Topic deleted successfully.', 'success')
+
+        # Notify user about vote return
+        if vote_records:
+            flash(f'Topic deleted successfully. {len(vote_records)} votes have been returned to users.', 'success')
+        else:
+            flash('Topic deleted successfully.', 'success')
+
     except Exception as e:
+        db.session.rollback()
         app.logger.error(f'Error deleting topic: {str(e)}')
         flash('An error occurred while deleting the topic.', 'error')
         
@@ -201,16 +250,42 @@ def vote(topic_id):
         topic = Topic.query.get_or_404(topic_id)
         vote_type = request.form.get('vote')
         
+        votes_used = current_user.get_total_votes_used()
+        total_available = current_user.get_total_available_votes()
+        
         if vote_type == 'upvote':
-            topic.votes += 1
-        elif vote_type == 'downvote' and topic.votes > 0:
-            topic.votes -= 1
+            if votes_used < total_available:
+                topic.votes += 1
+                vote_record = VoteRecord(
+                    user_id=current_user.id,
+                    topic_id=topic_id
+                )
+                db.session.add(vote_record)
+                db.session.commit()
+                flash('Vote added!', 'success')
+            else:
+                flash(f'You have used all {total_available} of your votes.', 'error')
+        
+        elif vote_type == 'downvote':
+            # Check if user has voted on this topic
+            vote_record = VoteRecord.query.filter_by(
+                user_id=current_user.id,
+                topic_id=topic_id
+            ).first()
             
-        db.session.commit()
+            if vote_record:
+                db.session.delete(vote_record)
+                topic.votes -= 1
+                db.session.commit()
+                flash('Vote removed and is now available to use again!', 'success')
+            else:
+                flash('You can only remove votes from topics you\'ve voted on.', 'error')
+                
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error in vote route: {str(e)}')
         flash('An error occurred while voting.', 'error')
+        
     return redirect(url_for('index'))
 
 @app.route('/agenda')
@@ -236,5 +311,46 @@ def internal_error(error):
     app.logger.error(f'Server Error: {str(error)}')
     return render_template('error.html', message='Internal server error'), 500
 
+@app.route('/complete_topic/<int:topic_id>', methods=['POST'])
+@login_required
+def complete_topic(topic_id):
+    try:
+        topic = Topic.query.get_or_404(topic_id)
+        topic.completed = True
+        topic.completed_at = datetime.utcnow()
+        db.session.commit()
+        flash('Topic marked as completed!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error completing topic: {str(e)}')
+        flash('An error occurred while completing the topic.', 'error')
+    return redirect(url_for('index'))
+
+@app.route('/reactivate_topic/<int:topic_id>', methods=['POST'])
+@login_required
+def reactivate_topic(topic_id):
+    try:
+        topic = Topic.query.get_or_404(topic_id)
+        topic.completed = False
+        topic.completed_at = None
+        db.session.commit()
+        flash('Topic reactivated!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error reactivating topic: {str(e)}')
+        flash('An error occurred while reactivating the topic.', 'error')
+    return redirect(url_for('completed_topics'))
+
+@app.route('/completed')
+@login_required
+def completed_topics():
+    try:
+        topics = Topic.query.filter_by(completed=True).order_by(Topic.completed_at.desc()).all()
+        return render_template('completed.html', topics=topics)
+    except Exception as e:
+        app.logger.error(f'Error loading completed topics: {str(e)}')
+        flash('An error occurred while loading completed topics.', 'error')
+        return render_template('completed.html', topics=[])
+    
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+{% if current_user.is_authenticated %}
+<h1>Completed Topics</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Final Votes</th>
+            <th>Completed Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for topic in topics %}
+        <tr>
+            <td>{{ topic.title }}</td>
+            <td>{{ topic.description }}</td>
+            <td>{{ topic.votes }}</td>
+            <td>{{ topic.completed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td class="actions">
+                <form action="{{ url_for('reactivate_topic', topic_id=topic.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="vote-button active-add">Reactivate</button>
+                </form>
+                {% if current_user.id == topic.user_id %}
+                <form action="{{ url_for('delete_topic', topic_id=topic.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="vote-button active-remove">Delete</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{{ url_for('index') }}" class="btn">Back to Active Topics</a>
+{% endif %}
+{% endblock %}

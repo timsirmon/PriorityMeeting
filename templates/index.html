@@ -1,37 +1,87 @@
-<!-- templates/index.html -->
 {% extends "base.html" %}
 {% block content %}
+{% if current_user.is_authenticated %}
 <h1>Proposed Topics</h1>
 <table>
     <thead>
         <tr>
-            <th>Title</th>
+            <th>
+                Title
+                <a href="{{ url_for('index', sort='title', direction='desc' if current_sort == 'title' and current_direction == 'asc' else 'asc') }}" 
+                   class="sort-link">
+                    {% if current_sort == 'title' %}
+                        {% if current_direction == 'asc' %}↑{% else %}↓{% endif %}
+                    {% else %}↕{% endif %}
+                </a>
+            </th>
             <th>Description</th>
-            <th>Votes</th>
+            <th>
+                Total Votes
+                <a href="{{ url_for('index', sort='votes', direction='desc' if current_sort == 'votes' and current_direction == 'asc' else 'asc') }}" 
+                   class="sort-link">
+                    {% if current_sort == 'votes' %}
+                        {% if current_direction == 'asc' %}↑{% else %}↓{% endif %}
+                    {% else %}↕{% endif %}
+                </a>
+            </th>
+            <th>My Votes</th>
+            <th>Date</th>
             <th>Actions</th>
         </tr>
     </thead>
+
     <tbody>
         {% for topic in topics %}
         <tr>
             <td>{{ topic.title }}</td>
-            <td>{{ topic.description or 'N/A' }}</td>
+            <td>{{ topic.description }}</td>
             <td>{{ topic.votes }}</td>
+            <td>{{ current_user.get_vote_count(topic.id) }}</td>
+            <td>{{ topic.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
             <td class="actions">
+                {% set has_voted = current_user.has_voted_on(topic.id) %}
                 <form action="{{ url_for('vote', topic_id=topic.id) }}" method="POST" style="display:inline;">
-                    <button type="submit" name="vote" value="upvote">Upvote</button>
+                    <button type="submit" 
+                            name="vote" 
+                            value="upvote" 
+                            class="vote-button {% if votes_used < total_votes %}active-add{% else %}inactive{% endif %}"
+                            {% if votes_used >= total_votes %}disabled{% endif %}>
+                        Add Vote
+                    </button>
                 </form>
                 <form action="{{ url_for('vote', topic_id=topic.id) }}" method="POST" style="display:inline;">
-                    <button type="submit" name="vote" value="downvote">Downvote</button>
+                    <button type="submit" 
+                            name="vote" 
+                            value="downvote" 
+                            class="vote-button {% if has_voted %}active-remove{% else %}inactive{% endif %}"
+                            {% if not has_voted %}disabled{% endif %}>
+                        Remove Vote
+                    </button>
                 </form>
-                {% if current_user.is_authenticated and current_user.id == topic.user_id %}
-                <form action="{{ url_for('delete_topic', topic_id=topic.id) }}" method="POST" style="display:inline;">
-                    <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this topic?');">Delete</button>
-                </form>
+                {% if current_user.id == topic.user_id %}
+                <div class="dropdown">
+                    <button class="dropbtn">•••</button>
+                    <div class="dropdown-content">
+                        <form action="{{ url_for('complete_topic', topic_id=topic.id) }}" method="POST">
+                            <button type="submit" class="dropdown-item">Complete</button>
+                        </form>
+                        <form action="{{ url_for('delete_topic', topic_id=topic.id) }}" method="POST">
+                            <button type="submit" class="dropdown-item">Delete</button>
+                        </form>
+                    </div>
+                </div>
                 {% endif %}
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+{% else %}
+<div class="login-prompt">
+    <h2>Welcome to Project Priority</h2>
+    <p>Please log in to view and manage topics.</p>
+    <a href="{{ url_for('login') }}" class="login-button">Login</a>
+    <p>New user? <a href="{{ url_for('register') }}">Register here</a></p>
+</div>
+{% endif %}
 {% endblock %}

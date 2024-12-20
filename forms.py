@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from models import User
+import re
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[
@@ -33,6 +34,11 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user:
             raise ValidationError('Email already registered. Please log in or use a different email.')
+                # Add domain validation
+        if not email.data.endswith('@cihp.com'):
+            raise ValidationError('Registration is restricted to @cihp.com email addresses only.')
+
+
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[
