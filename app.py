@@ -67,6 +67,8 @@ with app.app_context():
         app.logger.info('Database tables created successfully')
     except Exception as e:
         app.logger.error(f'Error creating database tables: {str(e)}')
+        app.logger.error('Reset password error:', exc_info=True)  # Add this in the exception handlers
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -378,19 +380,27 @@ def reset_password_request():
         return redirect(url_for('login'))
     return render_template('reset_password_request.html', form=form)
 
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
-def reset_password(token):
-    user = User.verify_reset_token(token)
-    if not user:
-        flash('Invalid or expired reset token', 'error')
-        return redirect(url_for('login'))
-    form = ResetPasswordForm()
-    if form.validate_on_submit():
-        user.password_hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        db.session.commit()
-        flash('Your password has been reset', 'success')
-        return redirect(url_for('login'))
-    return render_template('reset_password.html', form=form)
+@app.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    try:
+        form = ResetPasswordRequestForm()
+        if form.validate_on_submit():
+            user = User.query.filter_by(email=form.email.data).first()
+            if user:
+                try:
+                    send_password_reset_email(user)
+                    app.logger.info(f'Password reset email sent to {user.email}')
+                except Exception as e:
+                    app.logger.error(f'Failed to send password reset email: {str(e)}', exc_info=True)
+                    flash('Error sending password reset email.', 'error')
+                    return render_template('reset_password_request.html', form=form)
+            flash('Check your email for instructions to reset your password', 'info')
+            return redirect(url_for('login'))
+        return render_template('reset_password_request.html', form=form)
+    except Exception as e:
+        app.logger.error(f'Reset password request error: {str(e)}', exc_info=True)
+        flash('An unexpected error occurred.', 'error')
+        return render_template('reset_password_request.html', form=form)
 
 @app.route('/confirm_email/<token>')
 def confirm_email(token):
