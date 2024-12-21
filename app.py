@@ -371,17 +371,6 @@ def completed_topics():
 
 @app.route('/reset_password_request', methods=['GET', 'POST'])
 def reset_password_request():
-    form = ResetPasswordRequestForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user:
-            send_password_reset_email(user)
-        flash('Check your email for instructions to reset your password', 'info')
-        return redirect(url_for('login'))
-    return render_template('reset_password_request.html', form=form)
-
-@app.route('/reset_password_request', methods=['GET', 'POST'])
-def reset_password_request():
     try:
         form = ResetPasswordRequestForm()
         if form.validate_on_submit():
@@ -401,6 +390,20 @@ def reset_password_request():
         app.logger.error(f'Reset password request error: {str(e)}', exc_info=True)
         flash('An unexpected error occurred.', 'error')
         return render_template('reset_password_request.html', form=form)
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user = User.verify_reset_token(token)
+    if not user:
+        flash('Invalid or expired reset token', 'error')
+        return redirect(url_for('login'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.password_hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        db.session.commit()
+        flash('Your password has been reset', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_password.html', form=form)
 
 @app.route('/confirm_email/<token>')
 def confirm_email(token):
