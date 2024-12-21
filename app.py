@@ -83,13 +83,13 @@ login_manager.login_view = "login"
 login_manager.login_message_category = "error"
 
 # Ensure database tables exist
-with app.app_context():
-    try:
-        db.create_all()
-        app.logger.info("Database tables created successfully")
-    except Exception as e:
-        app.logger.error(f"Error creating database tables: {str(e)}")
-        app.logger.error("Database creation error:", exc_info=True)
+# with app.app_context():
+#     try:
+#         db.create_all()
+#         app.logger.info("Database tables created successfully")
+#     except Exception as e:
+#         app.logger.error(f"Error creating database tables: {str(e)}")
+#         app.logger.error("Database creation error:", exc_info=True)
 
 
 @login_manager.user_loader
