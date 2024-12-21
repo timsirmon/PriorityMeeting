@@ -8,6 +8,8 @@ venv/
 ENV/
 *.log
 *.backup
+.env
+
 
 # Flask
 instance/
