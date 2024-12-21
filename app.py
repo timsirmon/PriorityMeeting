@@ -106,39 +106,23 @@ def index():
     if not current_user.is_authenticated:
         return render_template("index.html")
     try:
-        sort = request.args.get("sort")
-        direction = request.args.get("direction", "asc")  # default to ascending
-        query = Topic.query.filter_by(completed=False)
-
-        if sort == "title":
-            query = query.order_by(Topic.title.desc() if direction == "desc" else Topic.title)
-        elif sort == "votes":
-            query = query.order_by(Topic.votes.desc() if direction == "desc" else Topic.votes)
-        elif sort == "date":
-            query = query.order_by(Topic.created_at.desc() if direction == "desc" else Topic.created_at)
-        else:
-            # Default sort by creation date, newest first
-            query = query.order_by(Topic.created_at.desc())
-
-        topics = query.all()
-
-        # Add these lines to pass the required variables
+        # Simplified query to debug the issue
+        topics = Topic.query.filter_by(completed=False).order_by(Topic.created_at.desc()).all()
+        app.logger.debug(f"Found {len(topics)} topics")
+        
         votes_used = current_user.get_total_votes_used()
         total_votes = current_user.get_total_available_votes()
-
-        return render_template(
-            "index.html",
-            topics=topics,
-            current_sort=sort,
-            current_direction=direction,
-            votes_used=votes_used,
-            total_votes=total_votes,
-        )
+        
+        app.logger.debug(f"User {current_user.username}: votes_used={votes_used}, total_votes={total_votes}")
+        
+        return render_template("index.html", 
+                             topics=topics,
+                             votes_used=votes_used,
+                             total_votes=total_votes)
     except Exception as e:
         app.logger.error(f"Error in index route: {str(e)}", exc_info=True)
         flash("An error occurred while loading topics.", "error")
         return render_template("index.html", topics=[])
-
 
 @app.route("/delete_topic/<int:topic_id>", methods=["POST"])
 @login_required
@@ -504,14 +488,9 @@ def reset_password(token):
 @app.route("/confirm_email/<token>")
 def confirm_email(token):
     try:
-        email = User.verify_confirmation_token(token)
-        if not email:
-            flash("The confirmation link is invalid or has expired.", "error")
-            return redirect(url_for("login"))
-
-        user = User.query.filter_by(email=email).first()
+        user = User.verify_confirmation_token(token)  # Change this to return the user directly
         if not user:
-            flash("Invalid confirmation link.", "error")
+            flash("The confirmation link is invalid or has expired.", "error")
             return redirect(url_for("login"))
 
         if user.email_confirmed:
@@ -521,12 +500,11 @@ def confirm_email(token):
             user.email_confirm_date = datetime.utcnow()
             db.session.commit()
             app.logger.info(f"Email confirmed for user {user.email}")
-            flash("Email confirmed successfully!", "success")
+            flash("Email confirmed successfully! You can now log in.", "success")
     except Exception as e:
         app.logger.error(f"Error confirming email: {str(e)}", exc_info=True)
         flash("The confirmation link is invalid or has expired.", "error")
     return redirect(url_for("login"))
-
 
 # --------------------------------------------------------------------
 # Test Email Route (for debugging)

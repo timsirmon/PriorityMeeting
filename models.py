@@ -86,7 +86,7 @@ class User(UserMixin, db.Model):
             email = s.loads(token, salt='email-confirm-salt', max_age=expires_sec)
             return User.query.filter_by(email=email).first()
         except:
-            return None
+            return None 
 
 class Topic(db.Model):
     __tablename__ = 'topics'
