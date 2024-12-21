@@ -2,7 +2,14 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import (
+    Flask,
+    render_template,
+    redirect,
+    url_for,
+    flash,
+    request,
+)
 from flask_login import (
     LoginManager,
     login_user,
@@ -15,7 +22,7 @@ from flask_migrate import Migrate
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
 
-from models import db, User, Topic, VoteRecord
+from models import db, User, Topic, VoteRecord  # Ensure VoteRecord is imported
 from forms import (
     RegistrationForm,
     LoginForm,
@@ -418,7 +425,7 @@ def completed_topics():
         app.logger.error(f"Error loading completed topics: {str(e)}", exc_info=True)
         flash("An error occurred while loading completed topics.", "error")
         return render_template("completed.html", topics=[])
-
+    
 
 # --------------------------------------------------------------------
 # Password Reset Routes

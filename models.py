@@ -8,6 +8,11 @@ from flask import current_app
 
 db = SQLAlchemy()
 
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
+from flask_login import UserMixin
+from datetime import datetime
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -27,6 +32,7 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
     def get_remaining_votes(self, topic_id):
         vote_record = VoteRecord.query.filter_by(
             user_id=self.id,
@@ -35,6 +41,7 @@ class User(UserMixin, db.Model):
         if not vote_record:
             return 2  # No votes used yet
         return 2 - vote_record.vote_count
+
     def get_vote_count(self, topic_id):
         # Simply count all votes for this user on this topic
         return VoteRecord.query.filter_by(
@@ -54,25 +61,32 @@ class User(UserMixin, db.Model):
     def get_total_available_votes(self):
         total_topics = Topic.query.count()
         return total_topics * 2
-    
-    def get_reset_token(self):
+
+    def get_reset_token(self, expires_sec=3600):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         return s.dumps(self.email, salt='password-reset-salt')
 
     @staticmethod
-    def verify_reset_token(token, expiration=3600):
+    def verify_reset_token(token, expires_sec=3600):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         try:
-            email = s.loads(token, salt='password-reset-salt', max_age=expiration)
-            return User.query.filter_by(email=email).first()
+            email = s.loads(token, salt='password-reset-salt', max_age=expires_sec)
         except:
             return None
+        return User.query.filter_by(email=email).first()
 
-    def get_email_confirm_token(self):
+    def get_email_confirm_token(self, expires_sec=3600):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         return s.dumps(self.email, salt='email-confirm-salt')
 
-
+    @staticmethod
+    def verify_confirmation_token(token, expires_sec=3600):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            email = s.loads(token, salt='email-confirm-salt', max_age=expires_sec)
+        except:
+            return None
+        return email
 
 
 
