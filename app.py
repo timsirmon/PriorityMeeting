@@ -111,26 +111,14 @@ def index():
         query = Topic.query.filter_by(completed=False)
 
         if sort == "title":
-            query = (
-                Topic.title.desc()
-                if direction == "desc"
-                else Topic.title
-            )
+            query = query.order_by(Topic.title.desc() if direction == "desc" else Topic.title)
         elif sort == "votes":
-            query = (
-                Topic.votes.desc()
-                if direction == "desc"
-                else Topic.votes
-            )
+            query = query.order_by(Topic.votes.desc() if direction == "desc" else Topic.votes)
         elif sort == "date":
-            query = (
-                Topic.created_at.desc()
-                if direction == "desc"
-                else Topic.created_at
-            )
+            query = query.order_by(Topic.created_at.desc() if direction == "desc" else Topic.created_at)
         else:
             # Default sort by creation date, newest first
-            query = Topic.created_at.desc()
+            query = query.order_by(Topic.created_at.desc())
 
         topics = query.all()
 

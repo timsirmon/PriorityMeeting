@@ -53,6 +53,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 class ResetPasswordRequestForm(FlaskForm):
+    """Form for requesting a password reset."""
     email = StringField('Email', validators=[
         DataRequired(),
         Email(),
@@ -60,7 +61,9 @@ class ResetPasswordRequestForm(FlaskForm):
     ])
     submit = SubmitField('Request Password Reset')
 
+
 class ResetPasswordForm(FlaskForm):
+    """Form for setting a new password."""
     password = PasswordField('New Password', validators=[
         DataRequired(),
         Length(min=6)

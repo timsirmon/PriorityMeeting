@@ -84,16 +84,9 @@ class User(UserMixin, db.Model):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         try:
             email = s.loads(token, salt='email-confirm-salt', max_age=expires_sec)
+            return User.query.filter_by(email=email).first()
         except:
             return None
-        return email
-
-
-
-
-
-
-
 
 class Topic(db.Model):
     __tablename__ = 'topics'
