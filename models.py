@@ -2,6 +2,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_login import UserMixin
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
+
 
 db = SQLAlchemy()
 
@@ -12,7 +15,15 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(150), nullable=False, unique=True)
     password_hash = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    email_confirmed = db.Column(db.Boolean, default=False)
+    email_confirm_date = db.Column(db.DateTime, nullable=True)
+    reset_password_token = db.Column(db.String(100), nullable=True)
+    reset_password_expires = db.Column(db.DateTime, nullable=True)
     topics = db.relationship('Topic', backref='author', lazy=True)
+    
+    __table_args__ = (
+        db.UniqueConstraint('reset_password_token', name='unique_reset_token'),
+    )
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -43,6 +54,25 @@ class User(UserMixin, db.Model):
     def get_total_available_votes(self):
         total_topics = Topic.query.count()
         return total_topics * 2
+    
+    def get_reset_token(self):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps(self.email, salt='password-reset-salt')
+
+    @staticmethod
+    def verify_reset_token(token, expiration=3600):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            email = s.loads(token, salt='password-reset-salt', max_age=expiration)
+            return User.query.filter_by(email=email).first()
+        except:
+            return None
+
+    def get_email_confirm_token(self):
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps(self.email, salt='email-confirm-salt')
+
+
 
 
 

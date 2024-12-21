@@ -1,0 +1,5 @@
+<!-- templates/email/comfirm_email.html -->
+<p>Dear {{ user.username }},</p>
+<p>Welcome! Please click the following link to confirm your email address:</p>
+<p><a href="{{ url_for('confirm_email', token=token, _external=True) }}">Click here to confirm your email</a></p>
+<p>Best regards,<br>Your Application Team</p>

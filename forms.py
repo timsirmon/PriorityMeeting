@@ -35,8 +35,8 @@ class RegistrationForm(FlaskForm):
         if user:
             raise ValidationError('Email already registered. Please log in or use a different email.')
                 # Add domain validation
-        if not email.data.endswith('@cihp.com'):
-            raise ValidationError('Registration is restricted to @cihp.com email addresses only.')
+        # if not email.data.endswith('@cihp.com'):
+        #     raise ValidationError('Registration is restricted to @cihp.com email addresses only.')
 
 
 
@@ -51,3 +51,22 @@ class LoginForm(FlaskForm):
     ])
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
+
+class ResetPasswordRequestForm(FlaskForm):
+    email = StringField('Email', validators=[
+        DataRequired(),
+        Email(),
+        Length(max=150)
+    ])
+    submit = SubmitField('Request Password Reset')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[
+        DataRequired(),
+        Length(min=6)
+    ])
+    confirm_password = PasswordField('Confirm New Password', validators=[
+        DataRequired(),
+        EqualTo('password')
+    ])
+    submit = SubmitField('Reset Password')

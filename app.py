@@ -1,19 +1,25 @@
 # app.py
 from dotenv import load_dotenv
+from itsdangerous import URLSafeTimedSerializer
+
+from utils.email import send_password_reset_email, mail
 load_dotenv()
 
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
+from flask_mail import Mail, Message
 from models import db, User, Topic, VoteRecord
 from forms import RegistrationForm, LoginForm
 from datetime import datetime
 import os
 import logging
 from logging.handlers import RotatingFileHandler
+from forms import ResetPasswordRequestForm, ResetPasswordForm
 
 app = Flask(__name__)
+mail.init_app(app)
 
 # Configure logging
 if not os.path.exists('logs'):
@@ -36,6 +42,15 @@ app.logger.info(f'Database path: {db_path}')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key')
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # or your SMTP server
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
+
+mail = Mail(app)
+
 
 # Initialize extensions
 db.init_app(app)
@@ -351,6 +366,61 @@ def completed_topics():
         app.logger.error(f'Error loading completed topics: {str(e)}')
         flash('An error occurred while loading completed topics.', 'error')
         return render_template('completed.html', topics=[])
+
+@app.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_password_reset_email(user)
+        flash('Check your email for instructions to reset your password', 'info')
+        return redirect(url_for('login'))
+    return render_template('reset_password_request.html', form=form)
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user = User.verify_reset_token(token)
+    if not user:
+        flash('Invalid or expired reset token', 'error')
+        return redirect(url_for('login'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.password_hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        db.session.commit()
+        flash('Your password has been reset', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_password.html', form=form)
+
+@app.route('/confirm_email/<token>')
+def confirm_email(token):
+    try:
+        email = URLSafeTimedSerializer(app.config['SECRET_KEY'])\
+            .loads(token, salt='email-confirm-salt', max_age=3600)
+        user = User.query.filter_by(email=email).first()
+        if user:
+            user.email_confirmed = True
+            user.email_confirm_date = datetime.utcnow()
+            db.session.commit()
+            flash('Email confirmed successfully!', 'success')
+        else:
+            flash('Invalid confirmation link', 'error')
+    except:
+        flash('The confirmation link is invalid or has expired', 'error')
+    return redirect(url_for('login'))
+
+# Create a test route temporarily
+@app.route('/test_email')
+def test_email():
+    try:
+        msg = Message('Test Email',
+                     sender=app.config['MAIL_DEFAULT_SENDER'],
+                     recipients=['timsirmon@gmail.com'])
+        msg.body = 'This is a test email'
+        mail.send(msg)
+        return 'Mail sent!'
+    except Exception as e:
+        return f'Error: {str(e)}'
     
 if __name__ == '__main__':
     app.run(debug=True)
